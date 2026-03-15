@@ -1,14 +1,48 @@
-var express = require('express');
-var router = express.Router();
-let productModel = require('../schemas/products')
+const express = require("express")
+const router = express.Router()
+const Product = require("../schemas/products")
 
-/* GET users listing. */
-router.get('/', async function(req, res, next) {
-  let result = await productModel.find({}) 
-  res.send(result);
-});
-router.get('/id', function(req, res, next) {
-  res.send('hahah');
-});
+// CREATE
+router.post("/", async (req,res)=>{
+    try{
+        const product = new Product(req.body)
+        await product.save()
+        res.send(product)
+    }catch(err){
+        res.status(400).send(err.message)
+    }
+})
 
-module.exports = router;
+// GET ALL
+router.get("/", async (req,res)=>{
+    const products = await Product.find({isDeleted:false})
+    res.send(products)
+})
+
+// GET BY ID
+router.get("/:id", async (req,res)=>{
+    const product = await Product.findById(req.params.id)
+    res.send(product)
+})
+
+// UPDATE
+router.put("/:id", async (req,res)=>{
+    const product = await Product.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        {new:true}
+    )
+    res.send(product)
+})
+
+// SOFT DELETE
+router.delete("/:id", async (req,res)=>{
+    const product = await Product.findByIdAndUpdate(
+        req.params.id,
+        {isDeleted:true},
+        {new:true}
+    )
+    res.send(product)
+})
+
+module.exports = router
