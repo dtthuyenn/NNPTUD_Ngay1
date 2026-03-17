@@ -1,4 +1,6 @@
 let mongoose = require('mongoose');
+const inventoryModel = require("./inventory"); // 👈 thêm dòng này
+
 let productSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -27,8 +29,7 @@ let productSchema = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         ref: 'category',
         required: true
-    }
-    ,
+    },
     isDeleted: {
         type: Boolean,
         default: false
@@ -37,9 +38,9 @@ let productSchema = new mongoose.Schema({
     timestamps: true
 })
 
-//hook
+
+// 🔥 HOOK xử lý slug
 productSchema.pre('save', async function () {
-    //this.slug = this.slug + "-1"
     let Product = this.constructor;
     let products = await Product.find({
         slug: new RegExp(this.slug, 'i')
@@ -48,7 +49,20 @@ productSchema.pre('save', async function () {
         this.slug = this.slug + "-" + products.length
     }
 })
-module.exports = new mongoose.model(
-    'product', productSchema
-)
 
+
+// 🚀 HOOK tạo inventory sau khi tạo product
+productSchema.post('save', async function (doc) {
+    try {
+        await inventoryModel.create({
+            product: doc._id,
+            stock: 0,
+            reserved: 0,
+            soldCount: 0
+        });
+    } catch (err) {
+        console.error("Create inventory error:", err.message);
+    }
+})
+
+module.exports = mongoose.model('product', productSchema);

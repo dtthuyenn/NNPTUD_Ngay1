@@ -28,11 +28,29 @@ module.exports = {
     CheckLogin: async function (req, res, next) {
 
         try {
+<<<<<<< HEAD
+            let token;
+            if (req.cookies.TOKEN_NNPTUD_C3) {
+                token = req.cookies.TOKEN_NNPTUD_C3
+            } else {
+                token = req.headers.authorization;
+                if (!token || !token.startsWith("Bearer")) {
+                    res.status(403).send({ message: "ban chua dang nhap" })
+                    return;
+                }
+                token = token.split(' ')[1]
+            }
+            let result = jwt.verify(token, 'secret');
+            if (result.exp * 1000 < Date.now()) {
+                res.status(403).send({ message: "ban chua dang nhap" })
+                return;
+=======
 
             let token = req.headers.authorization;
 
             if (!token || !token.startsWith("Bearer")) {
                 return res.status(403).send({ message: "ban chua dang nhap" });
+>>>>>>> 849174e35d3dc4192a8386d4e7f9341f46ea1200
             }
 
             token = token.split(' ')[1];
@@ -58,6 +76,16 @@ module.exports = {
 
         }
 
+    },
+    checkRole: function (...requiredRoles) {
+        return function (req, res, next) {
+            let roleOfUser = req.user.role.name;
+            if (requiredRoles.includes(roleOfUser)) {
+                next();
+            } else {
+                res.status(403).send("ban khong co quyen")
+            }
+        }
     }
 
 }
